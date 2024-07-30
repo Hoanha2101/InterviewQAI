@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNIST Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #uploadForm {
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+        }
+        #result {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>MNIST Classifier</h1>
+    <p>Upload an image to classify:</p>
+    
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept="image/*">
+        <button type="button" onclick="uploadImage()">Predict</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        function uploadImage() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (fileInput.files.length === 0) {
+                resultDiv.innerText = 'Please select an image.';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onloadend = function () {
+                const base64Image = reader.result.split(',')[1];
+                
+                fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ image: base64Image })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        resultDiv.innerText = `Error: ${data.error}`;
+                    } else {
+                        resultDiv.innerText = `Predicted Class: ${data.Class}`;
+                    }
+                })
+                .catch(error => {
+                    resultDiv.innerText = `Error: ${error}`;
+                });
+            }
+            
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
