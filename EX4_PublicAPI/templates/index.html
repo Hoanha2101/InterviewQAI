@@ -4,23 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MNIST Classifier</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        #uploadForm {
-            margin-bottom: 20px;
-        }
-        input[type="file"] {
-            margin-bottom: 20px;
-        }
-        #result {
-            font-size: 20px;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <h1>MNIST Classifier</h1>
@@ -42,14 +26,16 @@
                 resultDiv.innerText = 'Please select an image.';
                 return;
             }
+
+            console.log("File selected, starting to read file...");
             
             const file = fileInput.files[0];
             const reader = new FileReader();
             
             reader.onloadend = function () {
                 const base64Image = reader.result.split(',')[1];
-                
-                fetch('/predict', {
+
+                fetch('/Predict', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -69,6 +55,11 @@
                 });
             }
             
+            reader.onerror = function () {
+                console.log("Error reading file.");
+                resultDiv.innerText = 'Error reading file.';
+            }
+
             reader.readAsDataURL(file);
         }
     </script>

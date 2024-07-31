@@ -1,6 +1,8 @@
 import numpy as np
 import pickle
 from model import SimpleNN
+from PIL import Image
+from sklearn.metrics.pairwise import cosine_similarity
 
 def triplet_loss(anchor, positive, negative, alpha=0.2):
     pos_dist = np.sum((anchor - positive) ** 2, axis=1)
@@ -13,9 +15,14 @@ def load_class_vectors(filename):
         return pickle.load(f)
     
 def preprocess(image):
-    image = image / 255.0
-    image = image.reshape(1, -1)
-    return image
+    if isinstance(image, np.ndarray):
+        # Chuyển đổi mảng NumPy thành đối tượng ảnh PIL
+        image = Image.fromarray((image * 255).astype(np.uint8))
+    # Thay đổi kích thước ảnh và chuyển thành grayscale
+    image = image.resize((28, 28)).convert('L')
+    # Chuyển đổi ảnh thành mảng NumPy và chuẩn hóa
+    image = np.array(image) / 255.0
+    return image.reshape(1, -1)
 
 input_dim = 28*28
 output_dim = 100  # Number of classes in MNIST dataset
