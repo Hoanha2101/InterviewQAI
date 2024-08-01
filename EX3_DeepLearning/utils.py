@@ -2,6 +2,7 @@ import numpy as np
 from lib import *
 epoch = 10
 batch_size = 64
+learning_rate = 0.01
 
 def triplet_loss(anchor, positive, negative, margin=1.0):
     pos_dist = np.sum((anchor - positive) ** 2, axis=1)
@@ -9,31 +10,46 @@ def triplet_loss(anchor, positive, negative, margin=1.0):
     loss = np.maximum(0, pos_dist - neg_dist + margin)
     return np.mean(loss)
 
-def train(model, X_train, y_train, epochs=epoch, batch_size=batch_size):
+def train(model, X_train, y_train, epochs=10, batch_size=64, learning_rate=0.01):
     num_samples = X_train.shape[0]
     for epoch in range(epochs):
         indices = np.random.permutation(num_samples)
         for i in range(0, num_samples, batch_size):
-            batch_indices = indices[i:i+batch_size]
+            end = i + batch_size
+            if end > num_samples:
+                end = num_samples
+            batch_indices = indices[i:end]
             anchors = X_train[batch_indices]
-            
-            # Choose positive examples from the same batch
-            positives = anchors.copy()
-            
+            anchor_labels = y_train[batch_indices]
+
+            # Choose positive examples from the same class
+            positives = np.empty_like(anchors)
+            for j, anchor_label in enumerate(anchor_labels):
+                positive_indices = np.where((y_train == anchor_label).all(axis=1))[0]
+                positive_indices = positive_indices[positive_indices != batch_indices[j]]
+                positive_index = np.random.choice(positive_indices)
+                positives[j] = X_train[positive_index]
+
             # Ensure negatives are different from anchors
-            negative_indices = np.random.choice(num_samples, batch_size, replace=False)
-            negatives = X_train[negative_indices]
-            
+            negatives = np.empty_like(anchors)
+            for j, anchor_label in enumerate(anchor_labels):
+                negative_indices = np.where((y_train != anchor_label).any(axis=1))[0]
+                negative_index = np.random.choice(negative_indices)
+                negatives[j] = X_train[negative_index]
+
             # Forward pass
             anchor_out = model.forward(anchors)
             positive_out = model.forward(positives)
             negative_out = model.forward(negatives)
-            
+
             # Compute triplet loss
-            # Ensure the output size is correct
             if anchor_out.shape[0] == positive_out.shape[0] == negative_out.shape[0]:
                 loss = triplet_loss(anchor_out, positive_out, negative_out)
-                print(f'Epoch {epoch+1}, Loss: {loss}')
+                print(f'Epoch {epoch+1}, Batch {i//batch_size+1}, Loss: {loss}')
+
+                # Backward pass and update weights
+                grad_output = 2 * (anchor_out - positive_out) - 2 * (anchor_out - negative_out)
+                model.backward(anchors, grad_output, learning_rate)
             else:
                 print("Output dimensions mismatch")
 
