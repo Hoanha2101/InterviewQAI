@@ -4,11 +4,27 @@ epoch = 10
 batch_size = 64
 learning_rate = 0.01
 
-def triplet_loss(anchor, positive, negative, margin=1.0):
-    pos_dist = np.sum((anchor - positive) ** 2, axis=1)
-    neg_dist = np.sum((anchor - negative) ** 2, axis=1)
-    loss = np.maximum(0, pos_dist - neg_dist + margin)
-    return np.mean(loss)
+def triplet_loss(anchor, positive, negative, alpha=0.3):
+    '''
+    Triplet loss using numpy
+    Inputs:
+        anchor: Numpy array of anchor embeddings
+        positive: Numpy array of positive embeddings
+        negative: Numpy array of negative embeddings
+        alpha: Distance margin between positive and negative samples
+
+    Returns:
+        Computed loss
+    '''
+
+    positive_dist = np.sum(np.square(anchor - positive), axis=1)
+    negative_dist = np.sum(np.square(anchor - negative), axis=1)
+
+    loss_1 = positive_dist - negative_dist + alpha
+    
+    loss = np.sum(np.maximum(loss_1, 0.0))
+    
+    return loss
 
 def train(model, X_train, y_train, epochs=10, batch_size=64, learning_rate=0.01):
     num_samples = X_train.shape[0]
@@ -73,7 +89,6 @@ def preprocess(image):
     return image
 
 def predict(model, image, class_vectors):
-    print(preprocess(image))
     image_vector = model.forward(preprocess(image))
     sim = []
     for i in range(len(class_vectors)):

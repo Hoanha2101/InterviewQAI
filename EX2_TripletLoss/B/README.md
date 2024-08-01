@@ -1,4 +1,4 @@
-## B. Formula Triplet Loss with Multiple Samples
+## B. Formula Triplet Loss Extended
 $$\mathcal{L} = \frac{1}{A} \sum_{i=1}^{N} \max\left(0, \frac{1}{P} \sum_{p\in P}\|f(x_i^a) - f(x_i^p)\|^2 - \frac{1}{N}\sum_{n\in N} \|f(x_i^a) - f(x_i^n)\|^2 + \alpha\right)$$
 
 Where:

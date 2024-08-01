@@ -12,8 +12,6 @@ X_train = X_train.reshape(-1, 28*28)
 X_test = X_test.reshape(-1, 28*28)
 
 #Predict
-# y_pred = predict(X_train[:100], y_train[:100], X_test, k=3)
-
 y_pred = predict(X_train, y_train, X_test, k=3)
 
 #Cal accuracy
